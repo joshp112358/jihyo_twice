@@ -6,9 +6,9 @@
   <title>MNIST Live Tester</title>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js"></script>
   <style>
-    :root { --bg:#0f1226; --panel:#171a34; --ink:#ffffff; --muted:#8c93b2; --accent:#6ee7ff; --good:#4ade80; }
+    :root { --bg:#2a1520; --panel:#3a1e2a; --ink:#ffe9f2; --muted:#f6c4d1; --accent:#ff8fb1; --good:#f7a8c2; }
     * { box-sizing: border-box }
-    body { margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; background: radial-gradient(1200px 700px at 20% 0%, #1a1e44 0%, var(--bg) 35%) fixed, var(--bg); color: #e6e8ff; }
+    body { margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; background: radial-gradient(1200px 700px at 20% 0%, #4a2332 0%, var(--bg) 35%) fixed, var(--bg); color: var(--ink); }
     header { padding: 20px 16px 0; text-align: center; }
     header h1 { margin: 0; font-size: clamp(20px, 4vw, 32px); letter-spacing: 0.3px; }
     header p { margin: 6px 0 0; color: var(--muted); font-size: 14px }
@@ -33,7 +33,7 @@
     .kbd { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 12px; padding:2px 6px; border:1px solid rgba(255,255,255,0.2); border-radius:6px; }
     .hint { margin-top: 10px; font-size: 13px; color: var(--muted); text-align: center; }
     a { color: var(--accent); text-decoration: none }
-    .drop { outline: 2px dashed rgba(255,255,255,0.15); padding:10px; border-radius:12px; text-align:center; }
+    
     .vis-row { display:grid; grid-template-columns: repeat(14, 1fr); gap:2px; }
     .vis-cell { width: 10px; height: 10px; background: #222; border-radius: 2px; }
   </style>
@@ -52,8 +52,7 @@
             <button id="clearBtn">Clear (<span class="kbd">C</span>)</button>
             <button id="undoBtn">Undo (<span class="kbd">Z</span>)</button>
             <button id="predictBtn" class="accent">Predict (<span class="kbd">Enter</span>)</button>
-            <label class="filelabel" for="file">Upload PNG/JPG</label>
-            <input id="file" type="file" accept="image/*" style="display:none" />
+            
           </div>
           <div class="hint">Tip: draw large and centered. Thick, single stroke works best.</div>
         </div>
@@ -71,21 +70,11 @@
           </div>
         </div>
         <div id="probs" style="margin-top: 10px; display: grid; gap: 8px;"></div>
-        <div id="drop" class="drop" style="margin-top:14px;">or drop an image here</div>
+        
       </section>
     </div>
 
-    <section class="card">
-      <h3 style="margin: 0 0 8px;">How to use on GitHub Pages</h3>
-      <ol style="margin:0; padding-left: 18px; line-height: 1.6;">
-        <li>Create a repo (e.g. <span class="kbd">mnist-live</span>) and enable GitHub Pages (Deploy from <em>branch</em>).</li>
-        <li>Add this file as <span class="kbd">index.html</span> at the repo root.</li>
-        <li>Add a pre-trained TF.js MNIST model under <span class="kbd">/model/model.json</span> (with weight shards next to it). See notes below.</li>
-        <li>Commit & push. Open the Pages URL and draw!</li>
-      </ol>
-      <p class="small" style="margin-top:8px;">Model notes: You can train a CNN on MNIST in Python/Keras, then convert to TF.js with <span class="kbd">tensorflowjs_converter</span>. Or export a pre-trained MNIST TF.js model and place its <span class="kbd">model.json</span> and <span class="kbd">group1-shard
-y.bin</span> files into <span class="kbd">/model</span>.</p>
-    </section>
+    
   </main>
 
   <script>
@@ -98,7 +87,7 @@ y.bin</span> files into <span class="kbd">/model</span>.</p>
     const topline = document.getElementById('topline');
     const statusEl = document.getElementById('status');
     const modelNameEl = document.getElementById('modelName');
-    const drop = document.getElementById('drop');
+    
 
     // Draw settings
     const stroke = { color: '#fff', size: 22, cap: 'round', join: 'round' };
@@ -152,14 +141,7 @@ y.bin</span> files into <span class="kbd">/model</span>.</p>
 
     function redrawAll(){ resetCanvas(); for(const s of strokes){ for(let i=1;i<s.length;i++){ drawPathSegment(s[i-1], s[i]); } } }
 
-    // --- Image upload / DnD ---
-    document.getElementById('file').addEventListener('change', e=> handleFile(e.target.files?.[0]));
-    ;['dragenter','dragover'].forEach(t=> drop.addEventListener(t, e=>{e.preventDefault(); drop.style.background='rgba(255,255,255,0.05)';}))
-    ;['dragleave','drop'].forEach(t=> drop.addEventListener(t, e=>{e.preventDefault(); drop.style.background='transparent';}))
-    drop.addEventListener('drop', e=>{ const f=e.dataTransfer.files?.[0]; if(f) handleFile(f); });
-
-    function handleFile(file){ if(!file) return; const img=new Image(); img.onload=()=>{ const r=canvas.getBoundingClientRect(); const scale=Math.min(canvas.width/img.width, canvas.height/img.height); const w=img.width*scale, h=img.height*scale; resetCanvas(); ctx.drawImage(img, (canvas.width-w)/2, (canvas.height-h)/2, w, h); strokes=[]; preview(); }; img.src=URL.createObjectURL(file); }
-
+    // (Upload & drag-and-drop removed for simplicity)
     // --- Preprocess to 28x28 ---
     function get28x28(){
       // Crop to bounding box of drawn ink to reduce extra margins
@@ -205,10 +187,28 @@ y.bin</span> files into <span class="kbd">/model</span>.</p>
     // --- TF.js model loading ---
     let model = null;
     async function loadModel(){
+      const remote = 'https://hpssjellis.github.io/beginner-tensorflowjs-examples-in-javascript/saved-models/mnist/convnet/my-mnist01.json';
+      const local = './model/model.json';
       try {
-        model = await tf.loadLayersModel('./model/model.json');
-        modelNameEl.textContent = model?.name || 'mnist-cnn';
-        statusEl.innerHTML = `Model: <span id="modelName">${model?.name || 'mnist-cnn'}</span>`;
+        model = await tf.loadLayersModel(remote);
+        const name = (model && model.name) ? model.name : 'mnist-cnn';
+        modelNameEl.textContent = name + ' (remote)';
+        statusEl.innerHTML = `Model: <span id="modelName">${name} (remote)</span>`;
+      } catch(err1){
+        console.warn('Remote model load failed, trying local /model/model.json', err1);
+        try {
+          model = await tf.loadLayersModel(local);
+          const name = (model && model.name) ? model.name : 'mnist-cnn';
+          modelNameEl.textContent = name + ' (local)';
+          statusEl.innerHTML = `Model: <span id=\"modelName\">${name} (local)</span>`;
+        } catch(err2){
+          model = null;
+          modelNameEl.textContent = 'Model not found';
+          statusEl.textContent = 'Model not found. Remote + local failed. Check console.';
+          console.error('Both remote and local model loads failed', err2);
+        }
+      }
+    }</span>`;
       } catch(err){
         modelNameEl.textContent = 'Not found (place model at /model/model.json)';
         console.error(err);
